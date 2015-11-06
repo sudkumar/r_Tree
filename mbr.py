@@ -9,7 +9,7 @@ class MBR():
     '''
     Area of MBR
     '''
-    def area(self):
+    def Area(self):
         areaCovered = 1
         for i in range(0, len(self.minDim)):
             areaCovered *= (self.maxDim[i] - self.minDim[i])
@@ -18,7 +18,7 @@ class MBR():
     '''
     return combined MBR of self with another mbr
     '''
-    def combine(self, mbr):
+    def Combine(self, mbr):
         minDim = []
         maxDim = []
         # get the minimum of minimum and maximum of maximum
@@ -33,7 +33,7 @@ class MBR():
     '''
     gets the pripority for the mbr
     '''
-    def priority(self):
+    def Priority(self):
         value = 0
         for val in self.minDim:
             value += val
@@ -42,10 +42,56 @@ class MBR():
     '''
     returns dominate relationship of self and a mbr 
     '''
-    def dominates(self, mbr):
+    def Dominates(self, mbr):
         dims = len(self.maxDim)
         for dim in range(0, dims):
             # check whether lower part of mbr with respect to upper part of self.mbr
             if self.maxDim[dim] > mbr.minDim[dim]:
                 return False    
         return True
+
+
+    '''
+    Return whether self overlaps with mbr or not
+    '''
+    def Overlaps(self, mbr):
+        dims = len(self.maxDim)
+        for dim in range(dims):
+            lowerOverlaps =  self.minDim[dim] <= mbr.minDim[dim] and mbr.minDim[dim] <= self.maxDim[dim]
+            if lowerOverlaps:
+                return True
+            upperOverlaps = mbr.minDim[dim] <= self.minDim[dim] and self.minDim[dim] <= mbr.maxDim[dim]
+            if upperOverlaps:
+                return True
+        return False
+
+
+    """
+    Returns whether self contains mbr or not
+    """
+    def Contains(self, mbr):
+        dims = len(self.maxDim)
+        for dim in range(dims):
+            lowerContains =  self.minDim[dim] <= mbr.minDim[dim] and mbr.minDim[dim] <= self.maxDim[dim]
+            if not lowerContains:
+                return False
+            upperContains = self.minDim[dim] <= mbr.maxDim[dim] and mbr.maxDim[dim] <= self.maxDim[dim]
+            if not upperContains:
+                return False
+        return True
+
+
+    """
+    Returns whether self equals to or not
+    """
+    def Equals(self, mbr):
+        dims = len(self.maxDim)
+        for dim in range(dims):
+            lowerEquals =  self.minDim[dim] == mbr.minDim[dim]
+            if not lowerEquals:
+                return False
+            upperEquals = mbr.maxDim[dim] == self.maxDim[dim]
+            if not upperEquals:
+                return False
+        return True
+        

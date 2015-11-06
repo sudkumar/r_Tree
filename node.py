@@ -65,8 +65,8 @@ class Node():
             mbrN1 = N1.MBR()
             mbrN2 = N2.MBR()
             # get the enlargement in both groups after adding new key
-            enlargementInN1 = mbrN1.combine(nextKey.mbr).area()
-            enlargementInN2 = mbrN2.combine(nextKey.mbr).area()
+            enlargementInN1 = mbrN1.Combine(nextKey.mbr).Area()
+            enlargementInN2 = mbrN2.Combine(nextKey.mbr).Area()
 
             # add the new key to the group with least enlargement
             if(enlargementInN1 <= enlargementInN2 ):
@@ -107,9 +107,9 @@ class Node():
             for j in range(i+1, keysCount):
                 key2 = keys[j]
                 # get the combined region of key1 and key2
-                combinedRegion = key1.mbr.combine(key2.mbr)
+                combinedRegion = key1.mbr.Combine(key2.mbr)
                 # calculate the expandable area b
-                expandableArea = combinedRegion.area() - key1.mbr.area() - key2.mbr.area()
+                expandableArea = combinedRegion.Area() - key1.mbr.Area() - key2.mbr.Area()
                 # update area and nodes for out put
                 if(expandableArea > maxExpandableArea):
                     maxExpandableArea = expandableArea
@@ -134,12 +134,12 @@ class Node():
         
         for key in self.keys:
             # get the combined area by adding key to both N1 and N2
-            X = mbrN1.combine(key.mbr)
-            Y = mbrN2.combine(key.mbr)
+            X = mbrN1.Combine(key.mbr)
+            Y = mbrN2.Combine(key.mbr)
             
             # get area difference of areas after addition and before addition 
-            d1 = X.area() - mbrN1.area()
-            d2 = Y.area() - mbrN2.area()
+            d1 = X.Area() - mbrN1.Area()
+            d2 = Y.Area() - mbrN2.Area()
             
             # get the difference of these expandable areas
             expandableArea = abs(d1-d2)
@@ -156,13 +156,6 @@ class Node():
     Is Node full
     '''
     def IsFull(self, M):
-        # check for root node 
-        if(self.parent == None):
-            if(len(self.keys) == 2):
-                return True
-            else:
-                return False
-        # check for other nodes
         if(len(self.keys) == M):
             return True
         return False
@@ -175,7 +168,22 @@ class Node():
         if(len(keys) > 0):
             mbr = MBR(keys[0].mbr.minDim, keys[0].mbr.maxDim)
             for key in keys[1:]:
-                mbr = mbr.combine(key.mbr)  
+                mbr = mbr.Combine(key.mbr)  
             return mbr
         return None
         
+    """
+    Return whether a node underflows or not
+    """
+    def Underflows(self, m):
+        if len(self.keys) < m:
+            return True
+        return False 
+
+    """
+    Returns whether node overflows or not
+    """
+    def Overflows(self, M):
+        if len(self.keys) > M:
+            return True
+        return False

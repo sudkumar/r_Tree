@@ -23,6 +23,7 @@ class RTree():
     leafNode = self.ChooseLeaf(self.root, K)
     K.node = leafNode
 
+
     N1 = None
     N2 = None
 
@@ -49,14 +50,14 @@ class RTree():
     L = Node()
 
     for key in N.keys:
-      combinedArea = key.mbr.combine(K.mbr)                        
-      expandableArea = combinedArea.area() - key.mbr.area()
+      combinedArea = key.mbr.Combine(K.mbr)                        
+      expandableArea = combinedArea.Area() - key.mbr.Area()
       
       if(minExpandableArea == None or minExpandableArea > expandableArea):
         minExpandableArea = expandableArea
         L = key.childNode
       elif(minExpandableArea == expandableArea):
-        if L.MBR().area() > key.mbr.area():
+        if L.MBR().Area() > key.mbr.Area():
           L = key.childNode
     return self.ChooseLeaf(L, K)
 
@@ -127,3 +128,131 @@ class RTree():
     newKey.childNode = N2
     self.root.keys.append(newKey)
    
+
+  def Delete(self, tupleId, minDim, maxDim):
+    if len(self.root.keys) == 0:
+      print "Tree is empty"
+      return
+
+    # create the key for search
+    mbr = MBR(minDim, maxDim)
+    K = Key(tupleId, mbr)
+
+    # Find leaf node that contains this key
+    leafNode = self.FindLeaf(self.root, K)
+    if not leafNode:
+      print "Key not present in Tree"
+      return 
+
+    # remove key from leaf node
+    numKeys = len(leafNode.keys)
+    keyFound = False
+    for i in range(numKeys):
+      if leafNode.keys[i].tupleId == K.tupleId:
+        keyFound = True
+        leafNode.keys.pop(i) 
+        break
+    if not keyFound:
+      print "Key not present"
+      return
+    # propagate MBR changes upwards
+    self.CondenseTree(leafNode, []) 
+
+    # update root if it don't have  keys >= 2
+    if self.root.nodeType == NodeType.root and len(self.root.keys) == 1:
+      childNode = self.root.keys[0].childNode
+      self.root = childNode
+      self.root.parent = None
+      for key in self.root.keys:
+        key.node = self.root
+      if self.root.nodeType == NodeType.node:
+        self.root.nodeType = NodeType.root
+
+
+
+  """
+  Find leafnode that contains K in subtree rooted at N
+  """
+  def FindLeaf(self, N, K):
+    # return for recursive calls if we are at leaf
+    if N.nodeType == NodeType.leaf:
+      if N.MBR().Contains(K.mbr):
+        return N
+      else:
+        return None
+
+    # else iterate through all the keys in N find K if it is there
+    keys = N.keys
+    for key in keys:
+      if key.mbr.Overlaps(K.mbr):
+        L = self.FindLeaf(key.childNode, K)
+        if L:
+          return L
+    # key not found in N, return None
+    return None
+
+  """
+  Adjust Tree by condensing it's height after any deletion operation
+  @params: N: node where entries have been modified
+  @params: EN: list of eliminated nodes during adjustment (if it's size goes below m)
+  """
+  def CondenseTree(self, N, EN):
+    if N.nodeType != NodeType.root and N.parent != None:
+      # get the parent key of N
+      parentKey = N.parent
+
+      # get the parent node
+      P = parentKey.node
+
+      # check if N underflows or not
+      if N.Underflows(self.m):
+        P.keys.remove(parentKey)
+        EN.append(N)
+      else:
+        parentKey.mbr = N.MBR()
+
+      self.CondenseTree(P, EN)
+    # we are at root node
+    elif len(EN) != 0:
+      # EN is not empty
+      while len(EN) != 0:
+        # we are looping in reverse direction because items are inserted in 
+        # order of increasing height and we want none leaf node to place at the height
+        # where the were previously
+        node = EN.pop()
+        # if node N was from a leaf, then insert at leaf
+        if node.nodeType == NodeType.leaf:
+          for key in node.keys:
+            self.Insert(key.tupleId, key.mbr.minDim, key.mbr.maxDim)
+        else:
+          # insert at the same heigt as it was removed to maintain it's leaves at the same height as main tree
+          # the parent key of the node was removed because of onderflow, so search in it's siblings where we can add it 
+          # so the area expansion is minimum
+          parentNode = node.parent.node
+          minExpandableArea = float("inf")
+          myFriendNode = None
+
+          for key in parentNode.keys:
+            nodeMBR = N.MBR()
+            keyMBR = key.mbr
+            combinedArea = keyMBR.Combine(nodeMBR).Area()
+            expandableArea = combinedArea - keyMBR.Area() - nodeMBR.Area()
+            if minExpandableArea > expandableArea:
+              minExpandableArea = expandableArea
+              myFriendNode = key.childNode
+        
+          if myFriendNode:
+            # add node to friend node (add keys of node into friend node)
+            # check the node attribute of key from node to myFriendNode
+            for key in node:
+              key.node = myFriendNode
+
+            myFriendNode.keys = myFriendNode.keys + node.keys
+            if myFriendNode.Overflows(self.M):
+              print "Node goes overflow after adding deleted, so doing adjustment"
+              N1, N2 = myFriendNode.Split(self.m)
+              self.AdjustTree(N1, N2)
+          else:
+            # there is no keys left in parent node
+            # this case won't arise, just to see if it does
+            print "Unable to get friend node for removed node"
