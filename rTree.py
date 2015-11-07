@@ -79,7 +79,7 @@ class RTree():
   '''
   def AdjustTree(self, N1, N2 = None):
     # check if done
-    if(N1.parent == None):
+    if(N1.IsRoot()):
       # reached at root
       if(N2 != None):
         # root was splitted
@@ -138,9 +138,11 @@ class RTree():
     newKey.child = N2
     self.root.keys.append(newKey)
    
-
+  '''
+  Delete an key with mbrDim
+  '''
   def Delete(self, mbrDim, id=None):
-    if len(self.root.keys) == 0:
+    if self.IsEmpty():
       print "Tree is empty"
       return
 
@@ -180,14 +182,18 @@ class RTree():
     # propagate MBR changes upwards
     self.CondenseTree(leafNode, []) 
 
-    # update root if it don't have  keys >= 2
-    if self.root.nodeType == NodeType.root and len(self.root.keys) == 1:
+    # update root if it is not leaf and  don't have  keys >= 2
+    if not self.root.IsLeaf() and len(self.root.keys) == 1:
       child = self.root.keys[0].child
       self.root = child
       self.root.parent = None
+
+      # update node attribute for keys
       for key in self.root.keys:
         key.node = self.root
-      if self.root.nodeType == NodeType.node:
+      
+      # update new root node type if it's not leaf
+      if not self.root.IsLeaf():
         self.root.nodeType = NodeType.root
 
 
@@ -278,3 +284,7 @@ class RTree():
             # there is no keys left in parent node
             # this case won't arise, just to see if it does
             print "Unable to get friend node for removed node"
+
+
+  def IsEmpty(self):
+    return len(self.root.keys) == 0 

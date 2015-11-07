@@ -1,12 +1,12 @@
 #!/usr/bin/ python
 
-from rTree import RTree, NodeType, Key, Data
+from rTree import RTree
 
 
 
 def printTree(node):
 	print node.nodeType
-	if node.nodeType == NodeType.leaf:
+	if node.IsLeaf():
 		for key in node.keys:
 			print key.child.id, key.mbr.minDim, key.child.data
 
