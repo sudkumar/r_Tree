@@ -2,6 +2,9 @@
 
 from enum import Enum
 from mbr import MBR
+from key import *
+
+
 
 class NodeType(Enum):
     """Node types in R-Tree"""
@@ -9,13 +12,6 @@ class NodeType(Enum):
     node = 2
     leaf = 3
 
-class Key():
-    """Key for R-Tree"""
-    def __init__(self, tupleId=None, mbr=None, node=None, childNode=None):
-        self.mbr = mbr
-        self.tupleId = tupleId
-        self.node = node
-        self.childNode = childNode
 
 
 class Node():
@@ -39,7 +35,7 @@ class Node():
         N1.keys.append(K1)
         N1.parent = self.parent
         if self.parent != None:
-            self.parent.childNode = N1
+            self.parent.child = N1
 
         
         N2 = Node(self.nodeType)
@@ -93,8 +89,8 @@ class Node():
     def PickSeed(self):
         # intialization
         # intialize keys to empty nodes
-        K1 = Key()
-        K2 = Key() 
+        K1 = None
+        K2 = None 
         # intialize max expanable area to minimum
         maxExpandableArea = -float("inf")
         
@@ -125,10 +121,9 @@ class Node():
     def PickNext(self, N1, N2):
         # intialize max expanable area to minimum
         maxExpandableArea = -float("inf")
-        K1 = Key()
+        K1 = None
 
         # get mbr for N1 and N2
-        tmp = Key()
         mbrN1 = N1.MBR()
         mbrN2 = N2.MBR()
         

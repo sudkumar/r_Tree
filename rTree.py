@@ -10,14 +10,24 @@ class RTree():
     self.root = Node()
 
   '''
+  Make key to insert into rTree
+  '''
+  def MakeKey(self,id, mbrDim, sateliteData=None):
+    # create the data for tuple
+    data = Data(id, sateliteData)
+
+    # create mbr for the key
+    mbr = MBR(mbrDim, mbrDim)
+
+    # create and return the key
+    key = Key(mbr=mbr, child=data)
+    return key
+
+  '''
   K = Key()
   Insert new tuple Key in tree
   '''
-  def Insert(self, tupleId, minDim, maxDim):
-      
-    # create the key to insert
-    mbr = MBR(minDim, maxDim)
-    K = Key(tupleId, mbr)
+  def Insert(self, K):
 
     # Find position for new record
     leafNode = self.ChooseLeaf(self.root, K)
@@ -55,10 +65,10 @@ class RTree():
       
       if(minExpandableArea == None or minExpandableArea > expandableArea):
         minExpandableArea = expandableArea
-        L = key.childNode
+        L = key.child
       elif(minExpandableArea == expandableArea):
         if L.MBR().Area() > key.mbr.Area():
-          L = key.childNode
+          L = key.child
     return self.ChooseLeaf(L, K)
 
   '''
@@ -89,7 +99,7 @@ class RTree():
      # make a new key which is parent of splited node
       newKey = Key(mbr=N2.MBR(), node=parentNode)
       N2.parent = newKey
-      newKey.childNode = N2
+      newKey.child = N2
       # add this new key to parent of N1 if it is not full 
       # else add and split parent
       if not parentNode.IsFull(self.M):
@@ -119,24 +129,27 @@ class RTree():
     # create key for N1
     newKey = Key(mbr=N1.MBR(), node=self.root)
     N1.parent = newKey
-    newKey.childNode = N1
+    newKey.child = N1
     
     self.root.keys.append(newKey)
     # create key for N2
     newKey = Key(mbr=N2.MBR(), node=self.root)
     N2.parent = newKey
-    newKey.childNode = N2
+    newKey.child = N2
     self.root.keys.append(newKey)
    
 
-  def Delete(self, tupleId, minDim, maxDim):
+  def Delete(self, mbrDim, id=None):
     if len(self.root.keys) == 0:
       print "Tree is empty"
       return
 
-    # create the key for search
-    mbr = MBR(minDim, maxDim)
-    K = Key(tupleId, mbr)
+     # create the satelite data
+    data = Data(id=id)
+
+    # create the key to insert
+    mbr = MBR(mbrDim, mbrDim)
+    K = Key(mbr=mbr, child=data)
 
     # Find leaf node that contains this key
     leafNode = self.FindLeaf(self.root, K)
@@ -148,10 +161,19 @@ class RTree():
     numKeys = len(leafNode.keys)
     keyFound = False
     for i in range(numKeys):
-      if leafNode.keys[i].tupleId == K.tupleId:
-        keyFound = True
-        leafNode.keys.pop(i) 
-        break
+      # if id is provided, delete using this
+      if id:
+        if leafNode.keys[i].child.id == id:
+          keyFound = True
+          leafNode.keys.pop(i) 
+          break
+      # else delete using mbr.Equals by camparing mbrs
+      else:
+        if leafNode.keys[i].mbr.Equals(mbr):
+          keyFound = True
+          leafNode.keys.pop(i) 
+          break
+
     if not keyFound:
       print "Key not present"
       return
@@ -160,8 +182,8 @@ class RTree():
 
     # update root if it don't have  keys >= 2
     if self.root.nodeType == NodeType.root and len(self.root.keys) == 1:
-      childNode = self.root.keys[0].childNode
-      self.root = childNode
+      child = self.root.keys[0].child
+      self.root = child
       self.root.parent = None
       for key in self.root.keys:
         key.node = self.root
@@ -185,7 +207,7 @@ class RTree():
     keys = N.keys
     for key in keys:
       if key.mbr.Overlaps(K.mbr):
-        L = self.FindLeaf(key.childNode, K)
+        L = self.FindLeaf(key.child, K)
         if L:
           return L
     # key not found in N, return None
@@ -223,7 +245,7 @@ class RTree():
         # if node N was from a leaf, then insert at leaf
         if node.nodeType == NodeType.leaf:
           for key in node.keys:
-            self.Insert(key.tupleId, key.mbr.minDim, key.mbr.maxDim)
+            self.Insert(key)
         else:
           # insert at the same heigt as it was removed to maintain it's leaves at the same height as main tree
           # the parent key of the node was removed because of onderflow, so search in it's siblings where we can add it 
@@ -239,7 +261,7 @@ class RTree():
             expandableArea = combinedArea - keyMBR.Area() - nodeMBR.Area()
             if minExpandableArea > expandableArea:
               minExpandableArea = expandableArea
-              myFriendNode = key.childNode
+              myFriendNode = key.child
         
           if myFriendNode:
             # add node to friend node (add keys of node into friend node)

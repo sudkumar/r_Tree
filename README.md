@@ -22,11 +22,11 @@
 > root = rTree.root
 
 ## Info about keys in rTree
-> each key in rTree contains it's <mbr>, <childnode>, <tupleId>, <node>
+> each key in rTree contains it's <mbr>, <child>, <tupleId>, <node>
 
 > mbr = minimum bounding region for key
 
-> childnode = childnode to which this key points, None for leaf keys
+> child = child to which this key points, None for leaf keys
 
 > tupleId = tupleId for key, Node for other than leaf keys
 
