@@ -198,7 +198,16 @@ class RTree():
     # return for recursive calls if we are at leaf
     if N.IsLeaf():
       if N.MBR().Contains(K.mbr):
-        return N
+        # resolve equal mbr dimesions
+        if K.child and K.child.id:
+          for key in N.keys:
+            if key.child.id == K.child.id:
+              # this node contains key
+              return N
+          # this node doesn't contain this key
+          return None
+        else:  
+          return N
       else:
         return None
 
