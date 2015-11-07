@@ -12,21 +12,21 @@
 
 > \# To insert a key into R-Tree
 
-    key = rTree.MakeKey(tupleId, mbrDimensions, [ sateliteData ])
+    key = rTree.MakeKey(mbrDimensions, [ tupleId ], [ sateliteData ])
  
     rTree.Insert(key)
 
 > tupleId = 1 
 > mbrDimensions = [1,2]
 > data = [3,4,6]
-> key = rTree.MakeKey(tupleId, mbrDimensions, data)
+> key = rTree.MakeKey( mbrDimensions, tupleId, data)
 > rTree.Insert(key)
 
 > \# To delete a key from R-Tree
     
-    rTree.Delete(mbrDim, [ id ])
+    rTree.Delete(key)
     
-> rTree.Delete([1,2], 1)    
+> rTree.Delete(rTree.MakeKey(mbrDim=[1,2]))    
 
 > \# To access root of the rTree 
 

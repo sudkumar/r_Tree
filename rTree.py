@@ -12,7 +12,7 @@ class RTree():
   '''
   Make key to insert into rTree
   '''
-  def MakeKey(self,id, mbrDim, sateliteData=None):
+  def MakeKey(self, mbrDim, id=None, sateliteData=None):
     # create the data for tuple
     data = Data(id, sateliteData)
 
@@ -139,19 +139,12 @@ class RTree():
     self.root.keys.append(newKey)
    
   '''
-  Delete an key with mbrDim
+  Delete an key K
   '''
-  def Delete(self, mbrDim, id=None):
+  def Delete(self, K):
     if self.IsEmpty():
       print "Tree is empty"
       return
-
-     # create the satelite data
-    data = Data(id=id)
-
-    # create the key to insert
-    mbr = MBR(mbrDim, mbrDim)
-    K = Key(mbr=mbr, child=data)
 
     # Find leaf node that contains this key
     leafNode = self.FindLeaf(self.root, K)
@@ -164,14 +157,14 @@ class RTree():
     keyFound = False
     for i in range(numKeys):
       # if id is provided, delete using this
-      if id:
-        if leafNode.keys[i].child.id == id:
+      if K.child.id:
+        if leafNode.keys[i].child.id == K.child.id:
           keyFound = True
           leafNode.keys.pop(i) 
           break
       # else delete using mbr.Equals by camparing mbrs
       else:
-        if leafNode.keys[i].mbr.Equals(mbr):
+        if leafNode.keys[i].mbr.Equals(K.mbr):
           keyFound = True
           leafNode.keys.pop(i) 
           break
@@ -203,7 +196,7 @@ class RTree():
   """
   def FindLeaf(self, N, K):
     # return for recursive calls if we are at leaf
-    if N.nodeType == NodeType.leaf:
+    if N.IsLeaf():
       if N.MBR().Contains(K.mbr):
         return N
       else:
@@ -225,7 +218,8 @@ class RTree():
   @params: EN: list of eliminated nodes during adjustment (if it's size goes below m)
   """
   def CondenseTree(self, N, EN):
-    if N.nodeType != NodeType.root and N.parent != None:
+    # untill we are at root
+    if not N.IsRoot():
       # get the parent key of N
       parentKey = N.parent
 
@@ -239,7 +233,9 @@ class RTree():
       else:
         parentKey.mbr = N.MBR()
 
+      # condense upwards
       self.CondenseTree(P, EN)
+
     # we are at root node
     elif len(EN) != 0:
       # EN is not empty
