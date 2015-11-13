@@ -45,8 +45,8 @@ class MBR():
     def Dominates(self, mbr):
         dims = len(self.maxDim)
         for dim in range(0, dims):
-            # check whether lower part of mbr with respect to upper part of self.mbr
-            if self.maxDim[dim] > mbr.minDim[dim]:
+            # check whether upper part of mbr with respect to lower part of self.mbr
+            if self.minDim[dim] < mbr.maxDim[dim]:
                 return False    
         return True
 
