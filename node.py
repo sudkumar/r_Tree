@@ -182,3 +182,19 @@ class Node():
         if len(self.keys) > M:
             return True
         return False
+
+    """
+    Return whether node is leaf or not
+    """
+    def IsLeaf(self):
+        if self.nodeType == NodeType.leaf:
+            return True
+        return False
+
+    """
+    Return whether node is root or not
+    """
+    def IsRoot(self):
+        if self.parent == None:
+            return True
+        return False

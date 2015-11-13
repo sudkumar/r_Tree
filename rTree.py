@@ -12,7 +12,7 @@ class RTree():
   '''
   Make key to insert into rTree
   '''
-  def MakeKey(self,id, mbrDim, sateliteData=None):
+  def MakeKey(self, mbrDim, id=None, sateliteData=None):
     # create the data for tuple
     data = Data(id, sateliteData)
 
@@ -79,7 +79,7 @@ class RTree():
   '''
   def AdjustTree(self, N1, N2 = None):
     # check if done
-    if(N1.parent == None):
+    if(N1.IsRoot()):
       # reached at root
       if(N2 != None):
         # root was splitted
@@ -138,18 +138,13 @@ class RTree():
     newKey.child = N2
     self.root.keys.append(newKey)
    
-
-  def Delete(self, mbrDim, id=None):
-    if len(self.root.keys) == 0:
+  '''
+  Delete an key K
+  '''
+  def Delete(self, K):
+    if self.IsEmpty():
       print "Tree is empty"
       return
-
-     # create the satelite data
-    data = Data(id=id)
-
-    # create the key to insert
-    mbr = MBR(mbrDim, mbrDim)
-    K = Key(mbr=mbr, child=data)
 
     # Find leaf node that contains this key
     leafNode = self.FindLeaf(self.root, K)
@@ -162,14 +157,14 @@ class RTree():
     keyFound = False
     for i in range(numKeys):
       # if id is provided, delete using this
-      if id:
-        if leafNode.keys[i].child.id == id:
+      if K.child.id:
+        if leafNode.keys[i].child.id == K.child.id:
           keyFound = True
           leafNode.keys.pop(i) 
           break
       # else delete using mbr.Equals by camparing mbrs
       else:
-        if leafNode.keys[i].mbr.Equals(mbr):
+        if leafNode.keys[i].mbr.Equals(K.mbr):
           keyFound = True
           leafNode.keys.pop(i) 
           break
@@ -180,14 +175,18 @@ class RTree():
     # propagate MBR changes upwards
     self.CondenseTree(leafNode, []) 
 
-    # update root if it don't have  keys >= 2
-    if self.root.nodeType == NodeType.root and len(self.root.keys) == 1:
+    # update root if it is not leaf and  don't have  keys >= 2
+    if not self.root.IsLeaf() and len(self.root.keys) == 1:
       child = self.root.keys[0].child
       self.root = child
       self.root.parent = None
+
+      # update node attribute for keys
       for key in self.root.keys:
         key.node = self.root
-      if self.root.nodeType == NodeType.node:
+      
+      # update new root node type if it's not leaf
+      if not self.root.IsLeaf():
         self.root.nodeType = NodeType.root
 
 
@@ -197,9 +196,18 @@ class RTree():
   """
   def FindLeaf(self, N, K):
     # return for recursive calls if we are at leaf
-    if N.nodeType == NodeType.leaf:
+    if N.IsLeaf():
       if N.MBR().Contains(K.mbr):
-        return N
+        # resolve equal mbr dimesions
+        if K.child and K.child.id:
+          for key in N.keys:
+            if key.child.id == K.child.id:
+              # this node contains key
+              return N
+          # this node doesn't contain this key
+          return None
+        else:  
+          return N
       else:
         return None
 
@@ -219,7 +227,8 @@ class RTree():
   @params: EN: list of eliminated nodes during adjustment (if it's size goes below m)
   """
   def CondenseTree(self, N, EN):
-    if N.nodeType != NodeType.root and N.parent != None:
+    # untill we are at root
+    if not N.IsRoot():
       # get the parent key of N
       parentKey = N.parent
 
@@ -233,7 +242,9 @@ class RTree():
       else:
         parentKey.mbr = N.MBR()
 
+      # condense upwards
       self.CondenseTree(P, EN)
+
     # we are at root node
     elif len(EN) != 0:
       # EN is not empty
@@ -278,3 +289,7 @@ class RTree():
             # there is no keys left in parent node
             # this case won't arise, just to see if it does
             print "Unable to get friend node for removed node"
+
+
+  def IsEmpty(self):
+    return len(self.root.keys) == 0 
