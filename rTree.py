@@ -277,7 +277,7 @@ class RTree():
           if myFriendNode:
             # add node to friend node (add keys of node into friend node)
             # check the node attribute of key from node to myFriendNode
-            for key in node:
+            for key in node.keys:
               key.node = myFriendNode
 
             myFriendNode.keys = myFriendNode.keys + node.keys
